@@ -1,63 +1,123 @@
+"""
+	本模块是爬虫图形界面
+	Gui()是用于实现配置图形化界面
+"""
 import time
+import pickle
 import threading
 import tkinter as tk
+import dispose_data as dd
+import Get as gt
+from tkinter import messagebox
+from PIL import ImageTk, Image
+import database as db
+import Login as lg
+import tkinter.ttk
+from tkinter import ttk
+import progressbar
 
 class Gui(object):
-
+	"""
+	创建初始化界面
+	"""
 	def __init__(self,master):
 		self.window = master
 		self.window.config()
-		self.recommand = tk.Frame(self.window,width=800,height=900)
+		self.recommand = tk.Frame(self.window,width=600,height=500)
 		self.recommand.pack()
 		self.recommand.place(x=0,y=0)
-		b = tk.Button(self.recommand, text="开始爬取数据", font=('heiti', 25), width=20, height=1)  # 缺少一个command
-		b.place(relx=0.5,rely=0.5,anchor='center')
- 
- 
-		# def update_progress_bar():
-		# 	for percent in range(1, 101):
-		# 		hour = int(percent/3600)
-		# 		minute = int(percent/60) - hour*60
-		# 		second = percent % 60
-		# 		green_length = int(sum_length * percent / 100)
-		# 		canvas_progress_bar.coords(canvas_shape, (0, 0, green_length, 25))
-		# 		canvas_progress_bar.itemconfig(canvas_text, text='%02d:%02d:%02d' % (hour, minute, second))
-		# 		var_progress_bar_percent.set('%0.2f  %%' % percent)
-		# 		time.sleep(1)
-		 
-		 
-		# def run():
-		# 	th = threading.Thread(target=update_progress_bar)
-		# 	th.setDaemon(True)
-		# 	th.start()
-		 
-		 
-		# top = Tk()
-		# top.title('Progress Bar')
-		# top.geometry('800x500+290+100')
-		# top.resizable(False, False)
-		# top.config(bg='#535353')
-		 
-		# # 进度条
-		# sum_length = 630
-		# canvas_progress_bar = Canvas(top, width=sum_length, height=20)
-		# canvas_shape = canvas_progress_bar.create_rectangle(0, 0, 0, 25, fill='green')
-		# canvas_text = canvas_progress_bar.create_text(292, 4, anchor=NW)
-		# canvas_progress_bar.itemconfig(canvas_text, text='00:00:00')
-		# var_progress_bar_percent = StringVar()
-		# var_progress_bar_percent.set('00.00  %')
-		# label_progress_bar_percent = Label(top, textvariable=var_progress_bar_percent, fg='#F5F5F5', bg='#535353')
-		# canvas_progress_bar.place(relx=0.45, rely=0.4, anchor=CENTER)
-		# label_progress_bar_percent.place(relx=0.89, rely=0.4, anchor=CENTER)
-		# # 按钮
-		# button_start = Button(top, text='开始', fg='#F5F5F5', bg='#7A7A7A', command=run, height=1, width=15, relief=GROOVE, bd=2, activebackground='#F5F5F5', activeforeground='#535353')
-		# button_start.place(relx=0.45, rely=0.5, anchor=CENTER)
-		 
-		# top.mainloop()
+		# 设置按钮调用爬虫函数。
+		b = tk.Button(self.recommand, text="开始爬取数据", font=('heiti', 25), width=20, height=1,command=self.dele_initmenu)
+		b.place(relx=0.24,rely=0.35)
+		tk.Button(self.recommand,text='退出登陆',font=('heiti',25),width=20,height=1,command=self.exit0).place(relx=0.24,rely=0.55)
+
+	def exit0(self):
+		self.window.destroy()
+		lg.Login_face()
+
+
+	def dele_initmenu(self):
+		self.recommand.destroy()
+		self.new_menu()
+
+	def new_menu(self):
+		"""
+		正在爬取
+		"""
+		self.recommand1 = tk.Frame(self.window,width=600,height=500)
+		self.recommand1.pack()
+		self.recommand1.place(x=0,y=0)
+		tk.Label(self.recommand1,text='正在爬取数据',font=('heiti',15),width=20,height=1).place(relx=0.3,rely=0.45)
+		self.p1 = tk.ttk.Progressbar(self.recommand1, length=200,
+                     mode="indeterminate",
+                     orient=tk.HORIZONTAL)
+		self.p1.place(relx=0.1,rely=0.7)
+		# p1.step(33)
+		self.p1.start()
+		tk.messagebox.showinfo(title='display_messagebox',
+							   message='正在爬取')
+		# self.p1.start()
+		self.thread_it(gt.Get_news)
+		# MyThread(gt.Get_news)
+		self.second_menu()
+
+	def second_menu(self):
+		"""
+		爬取完成界面
+		"""
+		time.sleep(6)
+		# self.p1.stop()
+		self.display_messagebox()
+		self.windows2 = tk.Frame(self.window,width=800,height=840)
+		self.windows2.place(x=0,y=0)
+		print(time.time())
+		tk.Label(self.windows2,text='爬取完成',font=('heiti',15),width=20,height=1).place(relx=0.24,rely=0.3)
+		tk.Button(self.windows2,text='写入数据库',font=('heiti', 15), width=20, height=1, command=self.write_daba).place(relx=0.24,rely=0.4)
+		tk.Button(self.windows2,text='查看数据分析',font=('heiti', 15), width=20, height=1, command=self.zhuxingtu).place(relx=0.24,rely=0.45)
+		tk.Button(self.windows2, text='查看词云', font=('heiti', 15), width=20, height=1,command=self.ciyun).place(relx=0.24, rely=0.5)
+		
+
+	def write_daba(self):
+		"""
+		当点击查看数据分析时，数据写入数据库
+		"""
+		db.Database_connect()
+
+	def zhuxingtu(self):
+		"""
+		当点击查看数据分析时，调用登陆信息查询柱状图
+		"""
+		dd.Matp()
+
+
+	def ciyun(self):
+		"""
+		当点击查看词云按钮时，调用登陆信息查询词云图
+
+		"""
+		dd.Dispose()
+		
+
+
+
+	def display_messagebox(self):
+		return messagebox.showinfo(title='display_messagebox',message='爬取完成')
+		self.p1.stop()
+		self.recommand1.destroy()
+
+	def thread_it(self, func):
+		"""
+		启动多线程
+		"""
+		print(time.time())
+		t = threading.Thread(target=func)
+		# t.setDaemon(True)
+		t.start()
+		t.join()
 
 
 if __name__ == "__main__":
 	root = tk.Tk()
-	root.geometry('800x900')
+	root.geometry('600x500')
 	Gui(root)
 	root.mainloop()
