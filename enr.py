@@ -62,7 +62,7 @@ class Enroll_database(object):
 		else:
 			# print("数据表不存在，正在创建")
 			tk.messagebox.showerror(title='提示',
-				message='数据库不存在，正在创建')
+				message='数据表不存在，正在创建')
 			self.cur.execute("create table accounttable(id int(4) AUTO_INCREMENT,username Varchar(8) PRIMARY KEY,passwd varchar(10));")
 
 	def find_username(self):

@@ -2,7 +2,8 @@
     本模块内容功能是爬取腾讯新闻网页十篇新闻内容
     Get_news()类是获取新闻网页内容和新闻内容并将文字保存到本地。
 """
-
+import asyncio
+from aiohttp import ClientSession
 import urllib.request
 from bs4 import BeautifulSoup
 from lxml import etree
@@ -10,7 +11,20 @@ import re
 import tkinter.ttk
 from tkinter import ttk
 import progressbar
+import time
+import warnings
+warnings.filterwarnings("ignore")
+import logging
 
+logger = logging.getLogger('pencil')
+logger.setLevel(level=logging.DEBUG)
+logging.basicConfig(format='%(levelname)s:%(funcName)s:%(message)s', level = logging.DEBUG)
+log_path='log.txt'
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler = logging.FileHandler(log_path, encoding='UTF-8')
+handler.setLevel(logging.DEBUG)
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 class Get_news(object):
     """
@@ -18,9 +32,28 @@ class Get_news(object):
     """
     def __init__(self):
         """ 初始化该类 """
+
         self.html = "https://news.sina.com.cn/china/" # 新闻网址
+        self.news_list = []
         self.div_list = self.getnews_herf(self.html) # 调用函数获取新闻网页中的url。
-        self.write_news(self.div_list)
+        
+
+        url_list = []
+        for i in self.div_list:
+            if i == '':
+                div_list.remove(i)
+        for div in self.div_list[0:31]:
+            url = div.xpath('./a/@href')[0]
+            # print(url)
+            url_list.append(url)
+        # 任务列表对象。    
+        tasks = [asyncio.ensure_future(self.write_news(new_url)) for new_url in url_list]
+        loop =  asyncio.get_event_loop()
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(asyncio.wait(tasks)) # 挂起操作
+        # loop.close()
+        self.f.close()
+
 
     def getnews_herf(self,url):
         """
@@ -40,28 +73,21 @@ class Get_news(object):
         html = html.decode('utf-8')
         return html
 
-    def write_news(self,div_list):
-        """
-         读取具体新闻并将新闻写入文本文件中
-         """
-        # 打开一个文本文件写入新闻内容。
-        # 这里要改为excel表格或者数据库形式存入。
-        fp = open('news.txt','w',encoding='utf-8')
-        # 循环录入每篇新闻内容
-        i = 0
-        while True:
-            # 循环十次读入十条新闻
-            for div in div_list:
-                # 从获得的新闻标签列表中分别获得网站
-                html1 = div.xpath('./a/@href')[0]
-                # print(html1)
-                i += 1
-                # 每次获取后，次数加一直到十次。
-                html2 = self.get_html(html1)
-                # 获取具体新闻内容的网站信息。
-                bsObj = BeautifulSoup(html2, 'html.parser')
+    async def write_news(self,new_url):
+        self.f = open('news.txt','w',encoding='utf-8')
+        # print(time.time())
+        # url = div.xpath('./a/@href')[0]
+        async with ClientSession() as session:
+            # 使用异步编程访问网页
+            async with session.get(new_url) as response:
+                response = await response.text(encoding='utf-8')
+                # print(response)
+                bs_obj = BeautifulSoup(response, 'html.parser')
+                # bs_obj为网页信息
+                # logger.debug(f'{bs_obj} is done')
                 # 获取网站内的<p>标签内容。
-                downloadList = bsObj.select('p')
+                downloadList = bs_obj.select('p')
+                # logger.debug(f'{downloadList}')
                 # 创建一个空列表，后续存入新闻内容。
                 text_list = []
                 # 获取符合条件的<p>标签内容。
@@ -70,20 +96,20 @@ class Get_news(object):
                 for txt in downloadList:
                     html="{}".format(txt)
                     # 比较符合条件的p标签内容
+                    # print(html)
                     text_list += text_re.findall(html)
-                    for text_tuple in text_list:
-                        for x in text_tuple:
-                            # 写入内容
-                            fp.write(x)
-                # 每次写完之后代表一篇新闻结束，换行以表示新一篇新闻开始
-                fp.write("\n")
-                # 当十次后结束
-                if i == 10:
-                    break
-            # 结束最外层循环代表写入完毕
-            break
-        # 关闭文件。
-        fp.close()
+                    # print(text_list)
+                # with open('news2.txt', 'a+',encoding='utf-8') as f:
+                # for text_tuple in text_list:
+                await self.write_file(text_list)
+
+
+    async def write_file(self,text_list):
+        for txt in text_list:
+            # print(txt[1])
+            self.f.write(txt[1])
+        self.f.write('\n爬取时间：'+str((time.strftime("%Y-%m-%d %H：%M：%S", time.localtime())))+'\n')
+        self.f.write('\n')
 
 if __name__ == "__main__":
     Get_news()

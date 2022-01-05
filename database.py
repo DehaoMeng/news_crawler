@@ -77,7 +77,7 @@ class Database_connect(object):
 			# print("数据表不存在，正在创建")
 			tk.messagebox.showerror(title='提示',
 				message='数据库不存在，正在创建')
-			self.cur.execute("create table worddata;")
+			self.cur.execute("create table worddata(id varchar(4),word varchar(10),frequency varchar(10));")
 
 
 
