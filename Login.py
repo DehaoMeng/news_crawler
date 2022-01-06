@@ -32,7 +32,7 @@ class Login_face(object):
         def get_user():
             admin_name = str(entry_usr_name.get())
             admin_pwd = str(entry_usr_pwd.get())
-            # print(admin_name,admin_pwd)
+            # 调用查找数据库中的用户信息判断是否为正确用户，能否成功登陆。
             fu.Enroll_database(admin_name,admin_pwd,admin_window)
 
         bt_login = tk.Button(admin_window, text='登录', command=get_user)

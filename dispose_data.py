@@ -7,6 +7,8 @@
 import re
 import jieba
 import collections
+from tkinter import messagebox
+import tkinter as tk
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from PIL import Image,ImageSequence
@@ -17,7 +19,7 @@ environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 environ["QT_SCREEN_SCALE_FACTORS"] = "1"
 environ["QT_SCALE_FACTOR"] = "1"
 jieba.setLogLevel(jieba.logging.INFO)
-
+import xlwt
 
 
 class Dispose(object):
@@ -59,10 +61,10 @@ class Dispose(object):
         my_cloud = WordCloud(
             background_color='white',  # 设置背景颜色  默认是black
             width=900, height=600,
-            max_words=100,            # 词云显示的最大词语数量
+            max_words=101,            # 词云显示的最大词语数量
             font_path='simhei.ttf',   # 设置字体  显示中文
-            max_font_size=99,         # 设置字体最大值
-            min_font_size=16,         # 设置子图最小值
+            max_font_size=800,         # 设置字体最大值
+            min_font_size=10,         # 设置子图最小值
             random_state=50,          # 设置随机生成状态，即多少种配色方案
             mask=graph                # 设置背景模板
         ).generate_from_frequencies(self.word_counts_top100)
@@ -110,8 +112,52 @@ class Matp(object):
         vert_bars = axes.bar(x, y, color='lightblue', align='center')
         plt.show()
 
+class Write_excel(object):
+    def __init__(self):
+        with open('news.txt','r',encoding='utf-8') as f:
+            data = f.read()
+        self.word_counts_top100 = dict(Dispose.dispose(self,data))
+        self.write_excel()
+
+    def set_style(self,name,height,bold=False):
+        # 初始化样式
+        style = xlwt.XFStyle()
+        # 创建字体样式
+        font = xlwt.Font()
+        # 设置字体
+        font.name = name
+        # 无黑体
+        font.bold = bold
+        # 字体颜色
+        font.color_index = 0
+        # 行高
+        font.height = height
+        style.font = font
+        return style
+    def write_excel(self):
+        # 新建一个excel工作表单
+        self.fp = xlwt.Workbook()
+        sheet1 = self.fp.add_sheet('统计',cell_overwrite_ok=True)
+        # 设置要输入的第一行的内容
+        row0 = ["单词","频数"]
+        # 设置输入的列内容
+        colum0 = [k for k in self.word_counts_top100.keys()]
+        colum1 = [v for v in self.word_counts_top100.values()]
+        #写第一行
+        for i in range(0,len(row0)):
+            sheet1.write(0,i,row0[i],self.set_style('Times New Roman',220,True))
+        #写第一列
+        for i in range(0,len(colum0)):
+            sheet1.write(i+1,0,colum0[i],self.set_style('Times New Roman',220,True))
+        # 写第二列
+        for i in range(0,len(colum1)):
+            sheet1.write(i+1,1,colum1[i],self.set_style('Times New Roman',220,True))
+
+        self.fp.save('result.xls')
+        tk.messagebox.showinfo(title='提示',message='已经全部写入excel文件')
 
 if __name__ == "__main__":
     # Get_news()
-    # Dispose()
-    Matp()
+    Dispose()
+    # Matp()
+    # Write_excel()

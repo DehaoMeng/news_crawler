@@ -11,6 +11,7 @@ import enr as er
 
 class Enroll(object):
     def __init__(self):
+        # 新建用户注册界面
         self.root = tk.Tk()
         self.root.title('用户注册')
         self.root.geometry("300x200")
@@ -32,9 +33,11 @@ class Enroll(object):
     def matching(self):
         self.admin_name = self.entry_usr_name.get()
         self.admin_pwd = self.entry_usr_pwd.get()
+        # 判断用户名和密码是否符合规定
         if re.match('(\\w){5,8}',self.admin_name) and re.match('(\\w){5,10}',self.admin_pwd):
-        	er.Enroll_database(self.admin_name,self.admin_pwd)
-        	self.root.destroy()
+            # 调用enr.py中的Enroll_database()
+            er.Enroll_database(self.admin_name,self.admin_pwd)
+            self.root.destroy()
         elif re.match('(\\w){5,8}',self.admin_name) == None:
             tk.messagebox.showerror(title='Error',
                 message='用户名不符合输入,请重新输入!')
