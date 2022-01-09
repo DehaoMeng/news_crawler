@@ -76,7 +76,7 @@ class Gui(object):
 			self.p1.start()
 			tk.messagebox.showinfo(title='display_messagebox',message='正在爬取')
 			gt.Get_news(url)
-		self.third_face()
+			self.third_face()
 
 	def third_face(self):
 		"""
@@ -86,7 +86,7 @@ class Gui(object):
 		self.display_messagebox()
 		self.windows2 = tk.Frame(self.window,width=800,height=840,bg='pink')
 		self.windows2.place(x=0,y=0)
-		tk.Label(self.windows2,text='爬取完成',font=('heiti',15),width=20,height=1,bg='pink').place(relx=0.24,rely=0.0)
+		tk.Label(self.windows2,text='爬取完成',font=('heiti',15),width=20,height=1,bg='pink').place(relx=0.24,rely=0.02)
 		scroll = tk.Scrollbar(bg='pink')
 		text = tk.Text(self.windows2,width=70,height=20,bg='pink')
 		text.config(state='normal')
